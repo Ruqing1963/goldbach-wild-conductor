@@ -1,0 +1,579 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{url}
+
+\newcommand{\rad}{\operatorname{rad}}
+\newcommand{\Jac}{\operatorname{Jac}}
+\newcommand{\Cond}{\operatorname{Cond}}
+\newcommand{\End}{\operatorname{End}}
+\newcommand{\Res}{\operatorname{Res}}
+\newcommand{\sw}{\operatorname{sw}}
+\newcommand{\Gm}{\mathbb{G}_{\mathrm{m}}}
+\newcommand{\Ga}{\mathbb{G}_{\mathrm{a}}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\title{The $\gamma$-Invariant of Goldbach--Frey Curves:\\
+  Cluster Depths and Conjectural Bounds\\
+  for the Wild Conductor at $2$}
+\author{Ruqing Chen\\[4pt]
+  \small GUT Geoservice Inc., Montreal\\
+  \small\texttt{ruqing@hotmail.com}}
+\date{February 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+For the Goldbach--Frey curve
+$C\colon y^2 = x(x^2 - p^2)(x^2 - q^2)$ with $p \ne q$
+distinct odd primes, the conductor exponent $f_2$ at the
+prime~$2$ takes values in $\{4, 7, 8\}$ and has resisted
+closed-form description.  We prove a structural lemma
+showing that exactly one of $v_2(p-q)$ and $v_2(p+q)$
+equals~$1$, and define
+$\gamma = \max(v_2(p-q),\, v_2(p+q)) \ge 2$.
+We conjecture that $\gamma$ completely determines $f_2$:
+$f_2 = 8$ if $\gamma = 2$, $f_2 = 7$ if $\gamma = 3$,
+and $f_2 = 4$ if $\gamma \ge 4$.
+The case $\gamma \ge 4$ is \emph{proved}: the Weil
+restriction $\Jac(C) \sim E_1 \times E_2$
+(Paper~\cite{Chen2026WR}) gives
+$f_2 = f_2(E_1) + f_2(E_2)$, and a $j$-invariant
+analysis shows $v_2(j) = 6 - 2\gamma < 0$, placing
+both curves in the potentially multiplicative regime
+where $f_2(E) = 2$ unconditionally.
+The cases $\gamma \le 3$ are verified against all $10$
+Magma-computed conductors but remain conjectural.
+We note, however, that since
+$f_2(\Jac) = f_2(E_1) + f_2(E_2)$, the $10$ Magma
+values can in principle be independently verified
+by applying Tate's algorithm to the elliptic
+curves~$E_1$ and~$E_2$ over~$\mathbb{Q}_2$---an
+unconditional computation with no correctness caveats,
+unlike Magma's genus-$2$ Ogg heuristic.
+The $2$-adic cluster tree of the Weierstrass roots
+provides geometric intuition for the formula, although
+we emphasise that the Dokchitser cluster picture theory
+does not directly compute the Swan conductor at $p = 2$
+(where wild ramification requires Artin--Schreier
+analysis beyond root distances alone).
+We also note that the Magma values for $\gamma \le 3$
+rely on the Ogg formula heuristic at $v_2(\Delta) \ge 12$,
+so the $\gamma$-conjecture at $\gamma \le 3$ should be
+regarded as empirically robust but not yet rigorously
+established.
+A proof for the remaining cases requires computing
+the Dokchitser defect over~$\mathbb{Z}_2$, which we
+pose as an open problem.
+\end{abstract}
+
+
+% ====================================================================
+\section{Introduction}
+
+Papers~\cite{Chen2026TCV,Chen2026UTS} established that
+the conductor of $\Jac(C)$ at every odd prime~$r$
+dividing the discriminant is $f_r = 2$, yielding the
+odd-part formula
+$\Cond_{\mathrm{odd}} =
+[\rad_{\mathrm{odd}}(pqN|p{-}q|)]^2$ where $N = (p+q)/2$.
+The conductor exponent $f_2$ at the prime~$2$, however,
+remained a black box: Magma computations on $10$ test
+curves revealed $f_2 \in \{4, 7, 8\}$ with no apparent
+pattern.
+
+The difficulty at $r = 2$ is fundamental: the curve~$C$
+has wild ramification, so the tame conductor formula no
+longer suffices.  The cluster picture
+of Dokchitser~\cite{Dokchitser} computes the
+conductor of hyperelliptic curves from the $p$-adic
+distances between the Weierstrass roots, and provides
+geometric intuition for our formula.  However, we
+emphasise two important caveats:
+
+\begin{enumerate}
+\item[(a)] The cluster picture at $p = 2$ does not
+  directly determine the Swan conductor.  Since the
+  hyperelliptic degree~$2$ coincides with the residue
+  characteristic, the wild ramification requires
+  Artin--Schreier analysis and the computation of
+  the \emph{Dokchitser defect}---a correction term
+  that depends on higher-order congruences of the
+  polynomial coefficients, not merely on root distances.
+\item[(b)] The Magma values $f_2 \in \{4, 7, 8\}$
+  themselves rely on the Ogg--Saito formula, which
+  carries an internal warning when
+  $v_2(\Delta) \ge 12$: ``no correctness guarantee.''
+  Since $v_2(\Delta)$ is itself determined by~$\gamma$,
+  the $\gamma \to f_2$ correspondence may partially
+  reflect the internal logic of Magma's heuristic
+  rather than the true geometric conductor.
+\end{enumerate}
+
+\noindent
+With these caveats in mind, our results are:
+\begin{enumerate}
+\item prove a structural lemma on $v_2(p \pm q)$
+  (Lemma~\ref{lem:structure});
+\item conjecture a closed-form formula for $f_2$
+  in terms of
+  $\gamma = \max(v_2(p{-}q), v_2(p{+}q))$
+  (Conjecture~\ref{conj:f2}), verified on all
+  $10$ Magma data points;
+\item explain the formula via the $2$-adic cluster tree
+  (Section~\ref{sec:cluster});
+\item establish the density of each conductor value
+  (Proposition~\ref{prop:density});
+\item state the complete conductor formula combining
+  all papers (Section~\ref{sec:complete}).
+\end{enumerate}
+
+
+% ====================================================================
+\section{The Structural Lemma}\label{sec:lemma}
+
+\begin{lemma}\label{lem:structure}
+  For distinct odd primes $p \ne q$, exactly one of
+  $v_2(p - q)$ and $v_2(p + q)$ equals~$1$, and the
+  other is $\ge 2$.
+\end{lemma}
+
+\begin{proof}
+  Write $p = 2a + 1$ and $q = 2b + 1$.  Then
+  $p - q = 2(a - b)$ and $p + q = 2(a + b + 1)$.
+  Since $(a - b) + (a + b + 1) = 2a + 1$ is odd,
+  the integers $a - b$ and $a + b + 1$ have different
+  parity.  Exactly one is odd (contributing $v_2 = 1$
+  to the corresponding $p \pm q$) and the other is
+  even (contributing $v_2 \ge 2$).
+\end{proof}
+
+\begin{definition}\label{def:gamma}
+  The \emph{cluster depth parameter} is
+  $\gamma = \max(v_2(p - q),\, v_2(p + q)) \ge 2$.
+\end{definition}
+
+
+% ====================================================================
+\section{The Wild Conductor Formula}\label{sec:formula}
+
+\begin{conjecture}\label{conj:f2}
+  For the Goldbach--Frey curve~$C$ with $p \ne q$
+  distinct odd primes,
+  \begin{equation}\label{eq:f2}
+    f_2 \;=\; \begin{cases}
+      8 & \text{if } \gamma = 2, \\
+      7 & \text{if } \gamma = 3, \\
+      4 & \text{if } \gamma \ge 4.
+    \end{cases}
+  \end{equation}
+\end{conjecture}
+
+\noindent
+The case $\gamma \ge 4$ is proved unconditionally in
+Proposition~\ref{prop:stable} below; only the cases
+$\gamma = 2$ and $\gamma = 3$ remain conjectural.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{rrrrrrcl}
+\toprule
+$p$ & $q$ & $v_2(p{-}q)$ & $v_2(p{+}q)$ & $\gamma$
+& $f_2^{\mathrm{Magma}}$ & $f_2^{\mathrm{pred}}$ & \\
+\midrule
+\multicolumn{8}{l}{\small\itshape Conjectural regime
+  ($\gamma \le 3$, potentially good reduction):} \\[2pt]
+ 3 &  7 & 2 & 1 & 2 & 8 & 8 & $\checkmark$ \\
+13 & 17 & 2 & 1 & 2 & 8 & 8 & $\checkmark$ \\
+ 3 & 17 & 1 & 2 & 2 & 8 & 8 & $\checkmark$ \\
+ 7 & 19 & 2 & 1 & 2 & 8 & 8 & $\checkmark$ \\
+ 7 & 53 & 1 & 2 & 2 & 8 & 8 & $\checkmark$ \\
+11 & 19 & 3 & 1 & 3 & 7 & 7 & $\checkmark$ \\
+ 3 & 37 & 1 & 3 & 3 & 7 & 7 & $\checkmark$ \\
+\midrule
+\multicolumn{8}{l}{\small\itshape Proved regime
+  ($\gamma \ge 4$, Proposition~\ref{prop:stable}):} \\[2pt]
+ 7 & 23 & 4 & 1 & 4 & 4 & 4 & $\checkmark$ \\
+ 7 & 41 & 1 & 4 & 4 & 4 & 4 & $\checkmark$ \\
+11 & 37 & 1 & 4 & 4 & 4 & 4 & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\caption{Verification of Conjecture~\ref{conj:f2}
+  against all $10$ Magma-computed conductors.}
+\label{tab:verification}
+\end{table}
+
+\begin{proposition}[Stabilisation at $\gamma \ge 4$]
+\label{prop:stable}
+  For all $\gamma \ge 4$, the conductor exponent
+  $f_2 = 4$.
+\end{proposition}
+
+\begin{proof}
+  By Paper~\cite{Chen2026WR}, $\Jac(C) \sim E_1 \times E_2$
+  over~$\mathbb{Q}$, where
+  $E_1\colon Y^2 = X(X - p^2)(X - q^2)$ and
+  $E_2 = E_1^{(-1)}$.  Since
+  $V_\ell(\Jac) \cong V_\ell(E_1) \oplus V_\ell(E_2)$
+  as $G_\mathbb{Q}$-representations, the conductor
+  exponent is additive:
+  $f_2(\Jac) = f_2(E_1) + f_2(E_2)$.
+
+  For both $E_1$ and $E_2$, we compute:
+  $c_4 = 16(p^4 - p^2 q^2 + q^4)$ with
+  $v_2(c_4) = 4$ (since $p^4 - p^2 q^2 + q^4 \equiv 1
+  \pmod{8}$ for all odd $p, q$), and
+  $\Delta = 16 p^4 q^4 (p^2 - q^2)^2$ with
+  $v_2(\Delta) = 6 + 2\gamma$.
+  The $j$-invariant satisfies
+  $v_2(j) = 3 v_2(c_4) - v_2(\Delta) = 6 - 2\gamma$.
+
+  For $\gamma \ge 4$, $v_2(j) \le -2 < 0$, so
+  both $E_1$ and~$E_2$ have \emph{potentially
+  multiplicative} reduction at~$2$ (Kodaira type
+  $I_n^*$ for some $n \ge 0$).  By Ogg's theorem,
+  the conductor exponent of any elliptic curve with
+  Kodaira type $I_n^*$ is $f_p = 2$ at every
+  prime~$p$, including $p = 2$ (the wild part
+  vanishes for this reduction type).
+  Therefore $f_2(\Jac) = 2 + 2 = 4$ for all
+  $\gamma \ge 4$.
+\end{proof}
+
+\begin{remark}[The odd value $f_2 = 7$]
+\label{rem:odd}
+  Since $f_2(\Jac) = f_2(E_1) + f_2(E_2)$ and
+  $f_2 = 7$ is odd, the decomposition at $\gamma = 3$
+  must be asymmetric: $f_2(E_1) \ne f_2(E_2)$ (e.g.\
+  $4 + 3$ or $3 + 4$).  This is explained by the fact
+  that $E_2 = E_1^{(-1)}$ is the quadratic twist by~$-1$,
+  and $\mathbb{Q}_2(\sqrt{-1})/\mathbb{Q}_2$ is a
+  \emph{ramified} quadratic extension (discriminant~$-4$).
+  Twisting an elliptic curve with additive reduction by
+  a ramified character routinely alters the Swan
+  conductor~\cite{Kramer1981}.
+  At $\gamma = 2$, $f_2 = 8$ is even,
+  consistent with $f_2(E_1) = f_2(E_2) = 4$ (symmetric).
+\end{remark}
+
+\begin{remark}[$j$-invariant regime transition]
+\label{rem:regime}
+  The formula $v_2(j) = 6 - 2\gamma$ reveals a sharp
+  phase transition at $\gamma = 3 \leftrightarrow 4$:
+  for $\gamma \le 3$, $E_1$ and~$E_2$ have potentially
+  good reduction ($v_2(j) \ge 0$), where wild
+  ramification can occur; for $\gamma \ge 4$,
+  the reduction is potentially multiplicative
+  ($v_2(j) < 0$), where the Swan conductor vanishes.
+  The large jump $f_2 = 7 \to 4$ at this threshold
+  reflects the disappearance of all wild ramification.
+\end{remark}
+
+
+% ====================================================================
+\section{The Conductor Decomposition}\label{sec:decomp}
+
+The conductor exponent at a prime~$r$ decomposes as
+\begin{equation}\label{eq:decomp}
+  f_r \;=\; \underbrace{\dim V_\ell
+    - \dim V_\ell^{I_r}}_{\text{tame part}}
+  \;+\; \underbrace{\sw(V_\ell \mid_{I_r})}_{\text{wild part}},
+\end{equation}
+where $V_\ell = T_\ell(\Jac(C)) \otimes_{\mathbb{Z}_\ell}
+\mathbb{Q}_\ell$ is the $\ell$-adic Tate module
+($\ell \ne r$),
+$I_r$ is the inertia group, and $\sw$ is the Swan
+conductor.
+
+For $r = 2$, the Magma data is consistent with the
+hypothesis that
+$V_\ell^{I_2} = 0$ (no inertia invariants), which would
+give a tame part of~$4$ and yield:
+\begin{equation}\label{eq:swan}
+  f_2 = 4 + \sw, \qquad
+  \sw \in \{0, 3, 4\}.
+\end{equation}
+
+\begin{remark}
+  The vanishing $V_\ell^{I_2} = 0$ has not been proved
+  in this paper; it is an assumption consistent with
+  $f_2 \ge 4$ in all observed cases.  A proof would
+  require an explicit analysis of the N\'eron model
+  of $\Jac(C)$ over~$\mathbb{Z}_2$, which is
+  substantially harder than the tame case treated
+  in Paper~\cite{Chen2026UTS}.
+\end{remark}
+
+\noindent
+If the decomposition $f_2 = 4 + \sw$ holds, the three
+observed values correspond to:
+$\sw = 0$ ($\gamma \ge 4$, $f_2 = 4$):
+vanishing Swan conductor;
+$\sw = 3$ ($\gamma = 3$, $f_2 = 7$);
+$\sw = 4$ ($\gamma = 2$, $f_2 = 8$):
+maximal wild part for this family.
+
+
+% ====================================================================
+\section{The Cluster Picture at $r = 2$}\label{sec:cluster}
+
+\subsection{The $2$-adic distance matrix}
+
+The Weierstrass roots of $f(x) = x(x^2 - p^2)(x^2 - q^2)$
+are $\mathcal{R} = \{0, p, -p, q, -q\}$, all $2$-adic
+units except~$0$.  The pairwise distances are
+$v_2(p - (-p)) = 1$, $v_2(q - (-q)) = 1$, and by
+Lemma~\ref{lem:structure}, exactly one of
+$v_2(p{-}q), v_2(p{+}q)$ equals~$\gamma$ and the other
+equals~$1$.
+
+\subsection{The cluster tree}
+
+WLOG assume $v_2(p - q) = \gamma$ (the case
+$v_2(p + q) = \gamma$ is symmetric).  The cluster tree
+over~$\mathbb{Q}_2$ has three levels:
+
+\textbf{Level 0:}
+  Root $0$ is isolated.  The four roots
+  $\{p, -p, q, -q\}$ form a cluster~$\mathcal{C}_0$
+  of depth~$1$.
+
+\textbf{Level 1:}
+  Within $\mathcal{C}_0$, the pairs $\{p, q\}$ and
+  $\{-p, -q\}$ form sub-clusters (each of depth~$\gamma$).
+
+\textbf{Level $\gamma$:}
+  Each sub-cluster splits into singletons.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../figures/fig_cluster_tree.pdf}
+  \caption{(a)~Cluster trees for $\gamma = 2, 3, \ge 4$.
+    (b)~Distribution of $\gamma$ matching
+    $P(\gamma = k) \approx 2^{-k}$.}
+  \label{fig:cluster}
+\end{figure}
+
+\subsection{From cluster depth to wild conductor:
+  heuristic interpretation}
+
+The cluster tree provides a compelling geometric
+\emph{heuristic} for the $\gamma$-conjecture, but we
+stress that it does not constitute a proof.
+
+At odd primes, the cluster picture directly computes
+the conductor via the formula of
+Dokchitser~\cite{Dokchitser}.  At $p = 2$, however,
+the wild ramification introduces a \emph{defect} term
+that depends on higher-order congruence properties of
+the polynomial coefficients (specifically, their
+reduction modulo $4$, $8$, \ldots), not merely on the
+$2$-adic distances between roots.  Computing this defect
+for our family requires an explicit Artin--Schreier
+analysis or a full stable model computation
+over~$\mathbb{Z}_2$ via the Obus--Wewers
+theory~\cite{ObusWewers}.
+
+Nevertheless, the qualitative principle is suggestive:
+deeper clusters $\Longrightarrow$ roots closer
+$2$-adically $\Longrightarrow$ less wild ramification
+$\Longrightarrow$ smaller~$f_2$.
+The quantitative jumps $8 \to 7 \to 4$ at
+$\gamma = 2, 3, \ge 4$ remain conjectural.
+
+\begin{remark}[Magma's internal algorithm]\label{rem:magma}
+  The Magma values $f_2 \in \{4, 7, 8\}$ that we use as
+  ground truth are themselves computed via the Ogg--Saito
+  formula, which Magma flags with a warning when
+  $v_2(\Delta) \ge 12$.  Since $v_2(\Delta)$ is a
+  deterministic function of~$\gamma$ for our family
+  ($v_2(\Delta) = 6 + 2\gamma$ for the elliptic
+  quotients, by Proposition~\ref{prop:stable}), the
+  perfect $\gamma \to f_2$ correspondence may partially
+  reflect the internal logic of Magma's Ogg heuristic.
+  Independent verification (e.g., via \'etale cohomology
+  computations in SageMath or direct $\ell$-adic Galois
+  image calculations) would strengthen the conjecture.
+\end{remark}
+
+
+% ====================================================================
+\section{Density of Conductor Values}\label{sec:density}
+
+\begin{proposition}\label{prop:density}
+  Among Goldbach pairs $(p, q)$, the asymptotic density is
+  $P(f_2 = 8) = 1/2$, $P(f_2 = 7) = 1/4$,
+  $P(f_2 = 4) = 1/4$.
+\end{proposition}
+
+\begin{proof}
+  By Lemma~\ref{lem:structure}, $\gamma$ equals the
+  $2$-adic valuation of whichever of $p \pm q$ is more
+  divisible by~$2$.
+  By the Prime Number Theorem in arithmetic progressions,
+  the residue classes of primes $p$ and~$q$ modulo~$2^k$
+  are asymptotically uniformly distributed among the odd
+  classes for any fixed~$k$.  The $2$-adic valuations of
+  $p \pm q$ therefore behave as those of a random even
+  integer, giving
+  $P(\gamma = 2) = 1/2$, $P(\gamma = 3) = 1/4$,
+  $P(\gamma \ge 4) = 1/4$.
+\end{proof}
+
+\noindent
+Verified on $425{,}082$ pairs: $50.0\%$ / $25.0\%$ / $25.0\%$.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../figures/fig_wild_conductor.pdf}
+  \caption{(a)~$f_2$ as a step function of $\gamma$.
+    (b)~Distribution: exactly $50\%$/$25\%$/$25\%$.}
+  \label{fig:wild}
+\end{figure}
+
+
+% ====================================================================
+\section{The Complete Conductor Formula}\label{sec:complete}
+
+\begin{conjecture}[Complete conductor formula]
+\label{conj:complete}
+  For the Goldbach--Frey curve with $p + q = 2N$:
+  \begin{equation}\label{eq:complete}
+    \boxed{N_A \;=\; 2^{f_2(\gamma)} \cdot
+    \bigl[\rad_{\mathrm{odd}}(p \cdot q \cdot N
+    \cdot |p - q|)\bigr]^2}
+  \end{equation}
+  where $\gamma = \max(v_2(p{-}q), v_2(p{+}q))$ and
+  $f_2(\gamma)$ is given by~\eqref{eq:f2}.
+\end{conjecture}
+
+\noindent
+The $\gamma \ge 4$ regime is unconditionally proved
+(Proposition~\ref{prop:stable}).  Subject to the
+$\gamma$-conjecture for $\gamma \le 3$, every ingredient
+is explicit:
+$f_r = 2$ at odd primes (Paper~\cite{Chen2026UTS}, proved);
+$\rad_{\mathrm{odd}}$ (Paper~\cite{Chen2026TCV}, verified
+on $425{,}082$ pairs); $f_2(\gamma)$ (this paper:
+proved for $\gamma \ge 4$, conjectural for $\gamma \le 3$,
+$10/10$ against Magma).
+
+
+% ====================================================================
+\section{Discussion}
+
+The wild conductor at $r = 2$ was the last remaining
+unknown in the arithmetic of Goldbach--Frey curves.
+The $\gamma$-invariant
+$\gamma = \max(v_2(p{-}q), v_2(p{+}q))$ provides
+a clean conjectural description: the three-valued
+function $f_2 \in \{4, 7, 8\}$ appears to be
+controlled by a single $2$-adic parameter measuring
+how close $p$ and~$q$ are in the $2$-adic metric.
+
+The qualitative pattern is:
+\[
+  \gamma \uparrow
+  \;\Longrightarrow\;
+  \text{deeper cluster}
+  \;\Longrightarrow\;
+  f_2 \downarrow.
+\]
+The conjectured threshold at $\gamma = 4$, where $f_2$
+stabilises at its minimum value~$4$, is now
+\emph{proved} (Proposition~\ref{prop:stable}):
+the $j$-invariant satisfies $v_2(j) = 6 - 2\gamma$,
+so for $\gamma \ge 4$ both $E_1$ and~$E_2$ have
+potentially multiplicative reduction, forcing
+$f_2(E) = 2$ per curve and $f_2(\Jac) = 4$.
+
+Two obstacles remain for a complete proof of the
+$\gamma$-conjecture:
+\begin{enumerate}
+\item For $\gamma \le 3$ (potentially good reduction,
+  $v_2(j) \ge 0$), the cluster picture does not
+  directly yield the Swan conductor without computing
+  the Dokchitser defect, which requires
+  Artin--Schreier analysis beyond root distances.
+\item The Magma ground truth for $\gamma \le 3$ relies
+  on the Ogg heuristic with a correctness caveat at
+  high $v_2(\Delta)$ (Remark~\ref{rem:magma}).
+\end{enumerate}
+Note that the $\gamma \ge 4$ regime is now
+unconditional---it does not depend on Magma data at all.
+A complete proof for $\gamma \le 3$ would require
+either a full stable model computation
+over~$\mathbb{Z}_2$ using the Obus--Wewers
+theory~\cite{ObusWewers}, or independent verification
+of $f_2$ via $\ell$-adic Galois image computations.
+We pose this as an open problem.
+
+
+% ====================================================================
+\section*{Acknowledgments}
+
+Scripts and data are at
+\url{https://github.com/Ruqing1963/goldbach-wild-conductor}.
+
+
+\begin{thebibliography}{99}
+
+\bibitem{Chen2026TCV}
+R.~Chen,
+\emph{The true conductor of Goldbach--Frey curves},
+Zenodo, 2026.  \url{https://zenodo.org/records/18749731}
+
+\bibitem{Chen2026UTS}
+R.~Chen,
+\emph{Universal tame semistability of Goldbach--Frey Jacobians},
+Zenodo, 2026.  \url{https://zenodo.org/records/18751169}
+
+\bibitem{Chen2026Census}
+R.~Chen,
+\emph{A conductor census of 425,082 Goldbach--Frey curves},
+Zenodo, 2026.  \url{https://zenodo.org/records/18751442}
+
+\bibitem{Chen2026WR}
+R.~Chen,
+\emph{Goldbach--Frey Jacobians as Weil restrictions},
+Zenodo, 2026.  \url{https://zenodo.org/records/18752179}
+
+\bibitem{Dokchitser}
+T.~Dokchitser,
+Models of hyperelliptic curves,
+\emph{Trans.\ Amer.\ Math.\ Soc.}~\textbf{372} (2019),
+4519--4577.
+
+\bibitem{DD2022}
+T.~Dokchitser and V.~Dokchitser,
+Quotients of hyperelliptic curves and \'etale cohomology,
+\emph{Q. J. Math.}~\textbf{73} (2022), 747--768.
+
+\bibitem{ObusWewers}
+A.~Obus and S.~Wewers,
+Explicit resolution of weak wild quotient singularities,
+\emph{J.\ Algebraic Geom.}~\textbf{29} (2020), 691--728.
+
+\bibitem{Kramer1981}
+K.~Kramer,
+Arithmetic of elliptic curves upon quadratic extension,
+\emph{Trans.\ Amer.\ Math.\ Soc.}~\textbf{264} (1981),
+121--135.
+
+\end{thebibliography}
+
+\end{document}
